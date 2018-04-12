@@ -27,6 +27,50 @@ public class Doctor {
                 .replyTo(uuid.toString())
                 .build();
 
+
+        /////////////// consumer ///////////////////////////////
+
+
+
+        channel.exchangeDeclare(Config.DOCTOR_REPLY, BuiltinExchangeType.DIRECT);
+
+
+        channel.queueDeclare(Config.REPLY_QUEUE, false, false, false, null);
+        channel.queueBind(Config.REPLY_QUEUE, Config.DOCTOR_REPLY, uuid.toString());
+
+
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, "UTF-8");
+                System.out.println("Received: " + message);
+
+            }
+        };
+
+        // start listening
+        System.out.println("Waiting for messages...");
+        channel.basicConsume(Config.REPLY_QUEUE, true, consumer);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ////////////////////////////////////////////////
+
         while (true) {
 
             // read msg
@@ -44,5 +88,10 @@ public class Doctor {
             channel.basicPublish(Config.EXAMINATION_EXCHANGE, key, properties, message.getBytes("UTF-8"));
             System.out.println("Sent: " + message);
         }
+
+
+
+
+
     }
 }

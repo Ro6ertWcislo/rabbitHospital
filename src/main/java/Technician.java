@@ -30,23 +30,24 @@ public class Technician {
         String EXCHANGE_NAME = Config.EXAMINATION_EXCHANGE;
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
 
-        // queue & bind
-//        String queueName = channel.queueDeclare().getQueue();
-//        channel.queueBind(queueName, EXCHANGE_NAME, "");
-//        System.out.println("created queue: " + queueName);
 
-        // consumer (message handling)
         channel.queueDeclare(firstSpec, false, false, false, null);
         channel.queueBind(firstSpec, EXCHANGE_NAME, firstSpec);
         channel.queueDeclare(secondSpec, false, false, false, null);
         channel.queueBind(secondSpec, EXCHANGE_NAME, secondSpec);
 
+
+
+        channel.exchangeDeclare(Config.DOCTOR_REPLY, BuiltinExchangeType.DIRECT);
         Consumer consumer = new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 System.out.println("Received: " + message);
-                System.out.println(properties.getReplyTo());
+
+                System.out.println("sending to "+properties.getReplyTo());
+                channel.basicPublish(Config.DOCTOR_REPLY, properties.getReplyTo(), null, "dupeczka".getBytes("UTF-8"));
+
             }
         };
 
@@ -54,6 +55,19 @@ public class Technician {
         System.out.println("Waiting for messages...");
         channel.basicConsume(firstSpec, true, consumer);
         channel.basicConsume(secondSpec, true, consumer);
+
+
+        //////////////////// producer /////////////////
+
+
+
+
+
+
+
+    }
+
+    private static void respond() {
     }
 
 }
