@@ -21,7 +21,8 @@ public class RabbitConsumer {
         this.queues = queues;
         this.keys = keys;
     }
-    public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type, Consumer consumer){
+
+    public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type, Consumer consumer) {
         this.channel = channel;
         this.consumer = consumer;
         this.exchange = exchange;
@@ -29,23 +30,31 @@ public class RabbitConsumer {
         this.queues = queues;
         this.keys = keys;
     }
+
+
     public void init() throws IOException {
-        channel.exchangeDeclare(exchange,type);
+        channel.exchangeDeclare(exchange, type);
         initQueues();
     }
 
     private void initQueues() throws IOException {
-        for(int i=0;i<queues.size();i++){
-            String queue = queues.get(i);
-            String key = keys.get(i);
-            channel.queueDeclare(queue, false, false, false, null);
-            channel.queueBind(queue,exchange, key);
-            channel.basicConsume(queue, true, consumer);
+        if (queues != null)
+            for (int i = 0; i < queues.size(); i++) {
+                String queue = queues.get(i);
+                String key = keys.get(i);
+                channel.queueDeclare(queue, false, false, false, null);
+                channel.queueBind(queue, exchange, key);
+                channel.basicConsume(queue, true, consumer);
+            }
+        else {
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, exchange, "");
+            channel.basicConsume(queueName, true, consumer);
         }
 
     }
 
-    private Consumer defaultConsumer(){
+    private Consumer defaultConsumer() {
         return new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {

@@ -1,7 +1,7 @@
 package tech;
 
 import com.rabbitmq.client.*;
-import util.Config;
+import Config.Config;
 import util.RabbitConnection;
 import util.RabbitConsumer;
 
@@ -21,16 +21,7 @@ public class Technician {
         this.channel = connection.getChannel();
         channel.exchangeDeclare(Config.DOCTOR_REPLY_EXCHANGE, BuiltinExchangeType.TOPIC);
         channel.exchangeDeclare(Config.LOG_EXCHANGE, BuiltinExchangeType.FANOUT);
-        this.consumer =new DefaultConsumer(channel) {
-            @Override
-            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                String message = new String(body, "UTF-8");
-                System.out.println("Received: " + message);
-
-                channel.basicPublish(Config.DOCTOR_REPLY_EXCHANGE, properties.getReplyTo(), null, "dupeczka".getBytes("UTF-8"));
-                channel.basicPublish(Config.LOG_EXCHANGE, properties.getReplyTo(), null, message.getBytes("UTF-8"));
-            }
-        };
+        this.consumer = getTechConsumer();
     }
 
     public void run() throws Exception {
@@ -53,12 +44,32 @@ public class Technician {
                 consumer)
                 .init();
 
+        new RabbitConsumer(channel,
+                Config.INFO_EXCHANGE,
+                null,
+                null,
+                BuiltinExchangeType.FANOUT)
+                .init();
+
 
         System.out.println("Waiting for messages...");
-
 
 
     }
 
 
+    public Consumer getTechConsumer() {
+        return new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, "UTF-8");
+                System.out.println("Received: " + message);
+                if (!envelope.getRoutingKey().isEmpty()) {
+                    String reply = envelope.getRoutingKey() + " " + message + " " + "done.";
+                    channel.basicPublish(Config.DOCTOR_REPLY_EXCHANGE, properties.getReplyTo(), null, reply.getBytes("UTF-8"));
+                    channel.basicPublish(Config.LOG_EXCHANGE, properties.getReplyTo(), null, reply.getBytes("UTF-8"));
+                }
+            }
+        };
+    }
 }

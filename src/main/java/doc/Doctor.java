@@ -1,7 +1,7 @@
 package doc;
 
 import com.rabbitmq.client.*;
-import util.Config;
+import Config.Config;
 import util.RabbitConnection;
 import util.RabbitConsumer;
 
@@ -37,6 +37,12 @@ public class Doctor {
                 Arrays.asList(Config.REPLY_QUEUE),
                 Arrays.asList(uuid.toString()),
                 BuiltinExchangeType.TOPIC)
+                .init();
+        new RabbitConsumer(channel,
+                Config.INFO_EXCHANGE,
+                null,
+                null,
+                BuiltinExchangeType.FANOUT)
                 .init();
 
 
