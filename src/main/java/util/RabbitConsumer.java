@@ -1,3 +1,5 @@
+package util;
+
 import com.rabbitmq.client.*;
 
 import java.io.IOException;
@@ -11,7 +13,7 @@ public class RabbitConsumer {
     private final List<String> queues;
     private final List<String> keys;
 
-    public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type) throws IOException {
+    public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type) {
         this.channel = channel;
         this.consumer = defaultConsumer();
         this.exchange = exchange;
@@ -19,7 +21,7 @@ public class RabbitConsumer {
         this.queues = queues;
         this.keys = keys;
     }
-    public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type, Consumer consumer) throws IOException {
+    public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type, Consumer consumer){
         this.channel = channel;
         this.consumer = consumer;
         this.exchange = exchange;

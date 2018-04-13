@@ -1,4 +1,9 @@
+package tech;
+
 import com.rabbitmq.client.*;
+import util.Config;
+import util.RabbitConnection;
+import util.RabbitConsumer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,21 +19,23 @@ public class Technician {
     public Technician() throws IOException, TimeoutException {
         this.connection = new RabbitConnection();
         this.channel = connection.getChannel();
-        channel.exchangeDeclare(Config.DOCTOR_REPLY, BuiltinExchangeType.DIRECT);
+        channel.exchangeDeclare(Config.DOCTOR_REPLY_EXCHANGE, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(Config.LOG_EXCHANGE, BuiltinExchangeType.FANOUT);
         this.consumer =new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 System.out.println("Received: " + message);
 
-                channel.basicPublish(Config.DOCTOR_REPLY, properties.getReplyTo(), null, "dupeczka".getBytes("UTF-8"));
+                channel.basicPublish(Config.DOCTOR_REPLY_EXCHANGE, properties.getReplyTo(), null, "dupeczka".getBytes("UTF-8"));
+                channel.basicPublish(Config.LOG_EXCHANGE, properties.getReplyTo(), null, message.getBytes("UTF-8"));
             }
         };
     }
 
     public void run() throws Exception {
 
-        System.out.println("Technician started.");
+        System.out.println("tech.Technician started.");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
@@ -42,7 +49,7 @@ public class Technician {
                 Config.EXAMINATION_EXCHANGE,
                 Arrays.asList(firstSpec, secondSpec),
                 Arrays.asList(firstSpec, secondSpec),
-                BuiltinExchangeType.DIRECT,
+                BuiltinExchangeType.TOPIC,
                 consumer)
                 .init();
 

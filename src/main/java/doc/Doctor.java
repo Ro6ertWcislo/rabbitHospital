@@ -1,4 +1,9 @@
+package doc;
+
 import com.rabbitmq.client.*;
+import util.Config;
+import util.RabbitConnection;
+import util.RabbitConsumer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,14 +28,15 @@ public class Doctor {
                 .build();
     }
     public  void run() throws Exception {
-        System.out.println("Doctor with id "+uuid+" started.");
-        channel.exchangeDeclare(Config.EXAMINATION_EXCHANGE, BuiltinExchangeType.DIRECT);
+        System.out.println("doc.Doctor with id "+uuid+" started.");
+        channel.exchangeDeclare(Config.EXAMINATION_EXCHANGE, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(Config.LOG_EXCHANGE, BuiltinExchangeType.FANOUT);
 
         new RabbitConsumer(channel,
-                Config.DOCTOR_REPLY,
+                Config.DOCTOR_REPLY_EXCHANGE,
                 Arrays.asList(Config.REPLY_QUEUE),
                 Arrays.asList(uuid.toString()),
-                BuiltinExchangeType.DIRECT)
+                BuiltinExchangeType.TOPIC)
                 .init();
 
 
@@ -49,6 +55,7 @@ public class Doctor {
 
             // publish
             channel.basicPublish(Config.EXAMINATION_EXCHANGE, key, properties, message.getBytes("UTF-8"));
+            channel.basicPublish(Config.LOG_EXCHANGE, key, properties, message.getBytes("UTF-8"));
             System.out.println("Sent: " + message);
         }
 
