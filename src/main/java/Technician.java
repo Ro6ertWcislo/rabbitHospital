@@ -4,12 +4,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 public class Technician {
+    private final UUID uuid;
+    private final RabbitConnection connection;
+    private final Channel channel;
 
-    public static void main(String[] argv) throws Exception {
+    public Technician() throws IOException, TimeoutException {
+        this.uuid = UUID.randomUUID();;
+        this.connection = new RabbitConnection();
+        this.channel = connection.getChannel();
+    }
 
-        UUID uuid = UUID.randomUUID();
+    public void run() throws Exception {
+
         System.out.println("Technician with id " + uuid + " started.");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -20,21 +29,14 @@ public class Technician {
         String secondSpec = br.readLine();
 
 
-        // connection & channel
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
 
-        // exchange
-        String EXCHANGE_NAME = Config.EXAMINATION_EXCHANGE;
-        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+        channel.exchangeDeclare(Config.EXAMINATION_EXCHANGE, BuiltinExchangeType.DIRECT);
 
 
         channel.queueDeclare(firstSpec, false, false, false, null);
-        channel.queueBind(firstSpec, EXCHANGE_NAME, firstSpec);
+        channel.queueBind(firstSpec, Config.EXAMINATION_EXCHANGE, firstSpec);
         channel.queueDeclare(secondSpec, false, false, false, null);
-        channel.queueBind(secondSpec, EXCHANGE_NAME, secondSpec);
+        channel.queueBind(secondSpec, Config.EXAMINATION_EXCHANGE, secondSpec);
 
 
 
@@ -67,7 +69,5 @@ public class Technician {
 
     }
 
-    private static void respond() {
-    }
 
 }
