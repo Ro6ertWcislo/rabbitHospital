@@ -3,23 +3,20 @@ import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 public class Technician {
-    private final UUID uuid;
     private final RabbitConnection connection;
     private final Channel channel;
 
     public Technician() throws IOException, TimeoutException {
-        this.uuid = UUID.randomUUID();;
         this.connection = new RabbitConnection();
         this.channel = connection.getChannel();
     }
 
     public void run() throws Exception {
 
-        System.out.println("Technician with id " + uuid + " started.");
+        System.out.println("Technician started.");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
