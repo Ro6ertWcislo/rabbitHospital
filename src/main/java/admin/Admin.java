@@ -1,8 +1,8 @@
 package admin;
 
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.*;
 import Config.Config;
+import org.slf4j.LoggerFactory;
 import util.RabbitConnection;
 import util.RabbitConsumer;
 
@@ -15,10 +15,14 @@ import java.util.concurrent.TimeoutException;
 public class Admin {
     private final RabbitConnection connection;
     private final Channel channel;
+    private final org.slf4j.Logger log;
 
     public Admin() throws IOException, TimeoutException {
         this.connection = new RabbitConnection();
         this.channel = connection.getChannel();
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
+
+         log = LoggerFactory.getLogger(Admin.class);
     }
 
     public void run() throws IOException {
@@ -26,9 +30,10 @@ public class Admin {
         channel.exchangeDeclare(Config.INFO_EXCHANGE, BuiltinExchangeType.FANOUT);
         new RabbitConsumer(channel,
                 Config.LOG_EXCHANGE,
-                Arrays.asList(Config.LOG_QUEUE),
-                Arrays.asList("#"),
-                BuiltinExchangeType.FANOUT)
+                null,
+                null,
+                BuiltinExchangeType.FANOUT,
+                getAdminConsumer())
                 .init();
 
         while (true) {
@@ -36,6 +41,7 @@ public class Admin {
             // read msg
             System.out.println("Enter info: ");
             String info = br.readLine();
+            log.info(info);
 
 
             // break condition
@@ -49,5 +55,14 @@ public class Admin {
         }
 
 
+    }
+    public Consumer getAdminConsumer() {
+        return new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, "UTF-8");
+                log.info(message);
+            }
+        };
     }
 }
