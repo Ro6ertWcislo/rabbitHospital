@@ -22,13 +22,14 @@ public class Doctor {
         this.connection = new RabbitConnection();
         this.channel = connection.getChannel();
         this.uuid = UUID.randomUUID();
-        properties = new  AMQP.BasicProperties
+        properties = new AMQP.BasicProperties
                 .Builder()
                 .replyTo(uuid.toString())
                 .build();
     }
-    public  void run() throws Exception {
-        System.out.println("doc.Doctor with id "+uuid+" started.");
+
+    public void run() throws Exception {
+        System.out.println("doc.Doctor with id " + uuid + " started.");
         channel.exchangeDeclare(Config.EXAMINATION_EXCHANGE, BuiltinExchangeType.TOPIC);
         channel.exchangeDeclare(Config.LOG_EXCHANGE, BuiltinExchangeType.FANOUT);
 
@@ -64,9 +65,6 @@ public class Doctor {
             channel.basicPublish(Config.LOG_EXCHANGE, key, properties, message.getBytes("UTF-8"));
             System.out.println("Sent: " + message);
         }
-
-
-
 
 
     }

@@ -22,7 +22,7 @@ public class Admin {
         this.channel = connection.getChannel();
         System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
 
-         log = LoggerFactory.getLogger(Admin.class);
+        log = LoggerFactory.getLogger(Admin.class);
     }
 
     public void run() throws IOException {
@@ -56,7 +56,8 @@ public class Admin {
 
 
     }
-    public Consumer getAdminConsumer() {
+
+    private Consumer getAdminConsumer() {
         return new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
