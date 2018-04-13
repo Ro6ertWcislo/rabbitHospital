@@ -7,25 +7,32 @@ public class RabbitConsumer {
     private final Channel channel;
     private final Consumer consumer;
     private final String exchange;
+    private final BuiltinExchangeType type;
+    private final List<String> queues;
+    private final List<String> keys;
 
     public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type) throws IOException {
         this.channel = channel;
         this.consumer = defaultConsumer();
         this.exchange = exchange;
-
-        channel.exchangeDeclare(exchange,type);
-        initQueues(queues,keys);
+        this.type = type;
+        this.queues = queues;
+        this.keys = keys;
     }
     public RabbitConsumer(Channel channel, String exchange, List<String> queues, List<String> keys, BuiltinExchangeType type, Consumer consumer) throws IOException {
         this.channel = channel;
         this.consumer = consumer;
         this.exchange = exchange;
-
+        this.type = type;
+        this.queues = queues;
+        this.keys = keys;
+    }
+    public void init() throws IOException {
         channel.exchangeDeclare(exchange,type);
-        initQueues(queues,keys);
+        initQueues();
     }
 
-    private void initQueues(List<String> queues, List<String> keys) throws IOException {
+    private void initQueues() throws IOException {
         for(int i=0;i<queues.size();i++){
             String queue = queues.get(i);
             String key = keys.get(i);
